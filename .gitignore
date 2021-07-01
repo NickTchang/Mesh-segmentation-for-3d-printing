@@ -1,3 +1,4 @@
+*.pyc
 Meshes
 submeshes
 venv39
