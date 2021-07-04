@@ -1,4 +1,5 @@
 *.pyc
+screenshots
 Meshes
 submeshes
 venv39
