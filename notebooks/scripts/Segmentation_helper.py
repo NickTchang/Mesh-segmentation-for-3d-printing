@@ -13,6 +13,8 @@ import random
 from sklearn.cluster import SpectralClustering
 from sklearn import metrics
 
+
+
 def plot_mesh(mesh, face_color = [], show_normals = False):
     # set the mesh to to be displayed into viewer_mesh
     viewer_mesh = mesh
@@ -185,3 +187,49 @@ def hierarchy_pos(G, root=None, width=1., vert_gap = 0.2, vert_loc = 0, xcenter 
 
             
     return _hierarchy_pos(G, root, width, vert_gap, vert_loc, xcenter)
+
+
+def plot_mesh_from_graph (mesh, graph):
+    maximum = float(mesh.vertices.max())+1
+    minimum = float(mesh.vertices.min())-1
+    meshlist = []
+    #layout
+    layout = go.Layout(width=1100,
+                       height=650,
+                       paper_bgcolor='grey',
+                       margin=dict(l=20, r=20, t=20, b=20),
+                       scene_aspectmode='cube',
+                       scene = dict(
+                                    xaxis = dict(range = [minimum,maximum]),
+                                    yaxis = dict(range = [minimum,maximum]),
+                                    zaxis = dict(range = [minimum,maximum]),
+                                    aspectmode='manual', #this string can be 'data', 'cube', 'auto', 'manual'
+                                    #a custom aspectratio is defined as follows:
+                                    # mit dict(x=1, y=1, z=1) ist aequivalent zu aspectmode = cube
+                                    aspectratio=dict(x=1, y=1, z=1)
+                                    )
+                       )
+
+
+
+    for i in (x for x in graph.nodes() if graph.out_degree(x)==0 and graph.in_degree(x)==1):
+        vertices = graph.nodes[i]['mesh'].vertices
+        faces = graph.nodes[i]['mesh'].faces
+        x, y, z = vertices[:,:3].T
+        I, J, K = faces.T
+
+        meshlist.append(go.Mesh3d(
+                    x=-x,
+                    y=z,
+                    z=y,
+                    #vertexcolor=vertices[:, 3:], #the color codes must be triplets of floats  in [0,1]!!                      
+                    i=I,
+                    j=J,
+                    k=K,
+                    name='',
+                    showscale=False,
+                    color = f"#{random.randrange(0x1000000):06x}"
+        ))
+
+    fig1 = go.Figure(data=meshlist, layout=layout)
+    fig1.show()

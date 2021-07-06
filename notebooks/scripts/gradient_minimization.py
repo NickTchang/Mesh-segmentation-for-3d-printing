@@ -2,6 +2,7 @@ import numpy as np
 import trimesh as tm
 import networkx as nx
 import scipy.sparse
+from scripts import Segmentation_helper as sh
 
 def coarse_segmentation(mesh, n_segments = 2):
     
@@ -54,3 +55,25 @@ def coarse_segmentation(mesh, n_segments = 2):
     u_snake = u_snake_sorted[phi_inv]
     
     return u_snake
+
+
+def auto_segment(mesh, max_print_dim = 1, n_segments = 2):
+    g = nx.DiGraph()
+    g.add_node(1, mesh = mesh)
+    submeshparts = [1]
+
+    while(len(submeshparts) != 0):
+        if(np.any(g.nodes[submeshparts[0]]['mesh'].extents > max_print_dim)):
+            u_snake = coarse_segmentation(g.nodes[submeshparts[0]]['mesh'], n_segments)
+            lable = u_snake.copy().round(2)
+            keypair = {k: v for v, k in enumerate(np.unique(lable))}
+            lable = [keypair.get(n, n) for n in lable]
+            submeshes = sh.segment_mesh(lable, g.nodes[submeshparts[0]]['mesh'])
+            parent = submeshparts[0]
+            for i in submeshes:
+                j = submeshparts[-1]+1
+                submeshparts.append(j)
+                g.add_node(j, mesh = i)
+                g.add_edge(parent, j)
+        submeshparts.pop(0)
+    return g
